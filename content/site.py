@@ -11,6 +11,13 @@ PHONE_DISPLAY = "0508-202-4719"
 TELEGRAM_BUILD = "https://t.me/googleseolab"   # 웹사이트 제작문의
 TELEGRAM_PARTNER = "https://t.me/googleseolab"  # 제휴문의
 
+# 검색엔진 소유 확인
+NAVER_SITE_VERIFICATION = "da0a30b86942f136ed70bd5a4318b911b05fe616"
+
+# IndexNow (Bing·Naver·Yandex·Seznam 즉시 색인 통보) 키
+# 빌드 시 루트에 <INDEXNOW_KEY>.txt 가 생성되어 소유 확인에 사용된다.
+INDEXNOW_KEY = "a756b77b4a0d4ebc0f12493d44e8b38f"
+
 # 지역 기준 경로 — 경기도 수원시
 SUWON = "/gyeonggi/suwon/"
 

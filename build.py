@@ -18,8 +18,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from datetime import datetime, timezone
+
 from content import PAGES
-from content.site import (BASE_URL, BRAND, BRAND_MARK, NAV, PHONE,
+from content.site import (BASE_URL, BRAND, BRAND_MARK, INDEXNOW_KEY, NAV, PHONE,
                           PHONE_DISPLAY, TELEGRAM_BUILD, TELEGRAM_PARTNER)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -321,10 +323,11 @@ def render_page(page: dict) -> str:
 
 def build() -> None:
     report = []
-    sitemap_urls = []
+    indexable = []  # (url, title, desc) — sitemap·RSS 공용
+    site = BASE_URL.rstrip("/")
 
     for page in PAGES:
-        path = page["path"]  # "" 또는 "nowon-gu/wolgye-dong/" 형태
+        path = page["path"]  # "" 또는 "gyeonggi/suwon/.../" 형태
         out_dir = os.path.join(ROOT, path)
         os.makedirs(out_dir, exist_ok=True)
         html_out = render_page(page)
@@ -334,12 +337,17 @@ def build() -> None:
         chars = text_length(page["body"])
         noindex = page.get("noindex", False) or chars < MIN_INDEX_CHARS
         if not noindex:
-            sitemap_urls.append(BASE_URL.rstrip("/") + "/" + path)
+            indexable.append((site + "/" + path, page["title"], page["desc"]))
         report.append((path or "/", chars, "noindex" if noindex else "index"))
 
-    # sitemap.xml
+    now = datetime.now(timezone.utc)
+    lastmod = now.strftime("%Y-%m-%d")
+
+    # sitemap.xml — 색인 허용 페이지 + lastmod (신선도 신호)
     urls = "\n".join(
-        f"  <url><loc>{u}</loc></url>" for u in sitemap_urls
+        f"  <url><loc>{u}</loc><lastmod>{lastmod}</lastmod>"
+        f"<changefreq>weekly</changefreq></url>"
+        for u, _, _ in indexable
     )
     with open(os.path.join(ROOT, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write(
@@ -348,12 +356,44 @@ def build() -> None:
             f"{urls}\n</urlset>\n"
         )
 
-    # robots.txt
+    # rss.xml — 색인 허용 페이지 피드 (구글·네이버 발견 보조)
+    rss_date = now.strftime("%a, %d %b %Y %H:%M:%S +0000")
+    items = "\n".join(
+        "    <item>"
+        f"<title>{html.escape(t)}</title>"
+        f"<link>{u}</link>"
+        f"<guid isPermaLink=\"true\">{u}</guid>"
+        f"<description>{html.escape(d)}</description>"
+        f"<pubDate>{rss_date}</pubDate>"
+        "</item>"
+        for u, t, d in indexable
+    )
+    with open(os.path.join(ROOT, "rss.xml"), "w", encoding="utf-8") as f:
+        f.write(
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n'
+            "  <channel>\n"
+            f"    <title>{html.escape(BRAND)} — 수원 출장마사지·홈타이 안내</title>\n"
+            f"    <link>{site}/</link>\n"
+            f'    <atom:link href="{site}/rss.xml" rel="self" type="application/rss+xml"/>\n'
+            "    <description>수원시 출장마사지·홈타이 지역·역세권·생활권 안내</description>\n"
+            "    <language>ko</language>\n"
+            f"    <lastBuildDate>{rss_date}</lastBuildDate>\n"
+            f"{items}\n"
+            "  </channel>\n</rss>\n"
+        )
+
+    # robots.txt — 모든 봇 허용 + sitemap·rss 위치 안내
     with open(os.path.join(ROOT, "robots.txt"), "w", encoding="utf-8") as f:
         f.write(
             "User-agent: *\nAllow: /\n\n"
-            f"Sitemap: {BASE_URL.rstrip('/')}/sitemap.xml\n"
+            f"Sitemap: {site}/sitemap.xml\n"
+            f"# RSS: {site}/rss.xml\n"
         )
+
+    # IndexNow 키 파일 — 루트에서 text/plain 으로 접근 가능해야 함
+    with open(os.path.join(ROOT, f"{INDEXNOW_KEY}.txt"), "w", encoding="utf-8") as f:
+        f.write(INDEXNOW_KEY + "\n")
 
     # .nojekyll (GitHub Pages)
     open(os.path.join(ROOT, ".nojekyll"), "w").close()
@@ -363,7 +403,7 @@ def build() -> None:
     for p, c, r in sorted(report):
         flag = "" if (r == "noindex" or MIN_INDEX_CHARS <= c <= 2500) else "  ⚠"
         print(f"{p.ljust(width)}  {str(c).rjust(5)}  {r}{flag}")
-    print(f"\n{len(report)} pages built, {len(sitemap_urls)} in sitemap.")
+    print(f"\n{len(report)} pages built, {len(indexable)} in sitemap/rss.")
 
 
 if __name__ == "__main__":

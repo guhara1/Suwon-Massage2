@@ -1,5 +1,5 @@
 # 메인 페이지 — 수원시 허브. 모든 키워드를 밀어 넣지 않고 상세 페이지로 연결한다.
-from .site import BASE_URL, BRAND, PHONE, PHONE_DISPLAY
+from .site import BASE_URL, BRAND, PHONE, PHONE_DISPLAY, NAVER_SITE_VERIFICATION
 from .pricing import PRICING
 
 _FAQ = [
@@ -127,13 +127,18 @@ _BODY = f"""
 </section>
 """
 
+# 네이버 서치어드바이저 사이트 소유 확인
+_NAVER_VERIFY = (
+    f'<meta name="naver-site-verification" content="{NAVER_SITE_VERIFICATION}">\n'
+)
+
 PAGE = {
     "path": "",
     "title": "수원시 출장마사지｜수원역·인계동·영통·광교 홈타이 지역 안내",
     "desc": "수원시 출장마사지·홈타이 예약 전 수원역, 인계동, 영통동, 광교, 권선동 생활권을 확인하세요.",
     "h1": "수원시 출장마사지 · 수원시 홈타이 지역별 예약 안내",
     "body": _BODY,
-    "extra_head": _FAQ_JSONLD,
+    "extra_head": _NAVER_VERIFY + _FAQ_JSONLD,
     "breadcrumb": [],
     "hero": _HERO,
 }

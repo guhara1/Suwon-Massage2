@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://suwon-massage2.pages.dev/sitemap.xml
+# RSS: https://suwon-massage2.pages.dev/rss.xml
