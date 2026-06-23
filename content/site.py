@@ -1,6 +1,6 @@
 # 사이트 공통 설정 — 수원시 출장마사지·홈타이 안내
-# 배포 도메인 확정 후 BASE_URL 을 실제 도메인으로 변경하세요.
-BASE_URL = "https://www.suwon-massage.example.com"
+# 배포 도메인 (Cloudflare Pages)
+BASE_URL = "https://suwon-massage2.pages.dev"
 
 BRAND = "바로 GO"
 BRAND_MARK = "GO"
